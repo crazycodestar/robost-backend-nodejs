@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "ES2017",
+		"module": "CommonJS",
+		"moduleResolution": "Node16",
+		"allowJs": true,
+		"checkJs": true,
+		"outDir": "./dist",
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": false,
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"esModuleInterop": true
+	},
+	"include": ["./src/**/*"],
+	"exclude": ["node_modules"]
+}
