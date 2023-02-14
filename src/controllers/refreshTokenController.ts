@@ -1,30 +1,37 @@
-// TODO: re-write this to work with redis not the normal database
-// const User = require("../model/User");
-const jwt = require("jsonwebtoken");
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import { REFRESH_TOKEN_SECRET } from "../config/environment";
+import client from "../config/redisConfig";
 
-export const handleRefreshToken = async (req, res) => {
-	return null;
-	// const cookies = req.cookies;
-	// if (!cookies?.jwt) return res.sendStatus(401);
-	// const refreshToken = cookies.jwt;
+export type tokenObject = { id: number };
 
-	// const foundUser = await User.findOne({ refreshToken }).exec();
-	// if (!foundUser) return res.sendStatus(403); //Forbidden
-	// // evaluate jwt
-	// jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-	// 	if (err || foundUser.username !== decoded.username)
-	// 		return res.sendStatus(403);
-	// 	const roles = Object.values(foundUser.roles);
-	// 	const accessToken = jwt.sign(
-	// 		{
-	// 			UserInfo: {
-	// 				username: decoded.username,
-	// 				roles: roles,
-	// 			},
-	// 		},
-	// 		process.env.ACCESS_TOKEN_SECRET,
-	// 		{ expiresIn: "10s" }
-	// 	);
-	// 	res.json({ roles, accessToken });
-	// });
+export const handleRefreshToken = async (req: Request, res: Response) => {
+	const cookies = req.cookies;
+
+	if (!cookies?.jwt) return res.sendStatus(401);
+	const refreshToken: string = cookies.jwt;
+
+	try {
+		const user: tokenObject = await jwt.verify(
+			refreshToken,
+			REFRESH_TOKEN_SECRET
+		);
+
+		const data = await client.get((user as tokenObject).id.toString());
+		if (data !== refreshToken) return res.sendStatus(403);
+
+		const accessToken = jwt.sign(
+			{
+				UserInfo: {
+					id: user.id,
+					// roles: roles,
+				},
+			},
+			process.env.ACCESS_TOKEN_SECRET,
+			{ expiresIn: "10s" }
+		);
+		return res.json({ accessToken });
+	} catch (err) {
+		return res.sendStatus(403);
+	}
 };

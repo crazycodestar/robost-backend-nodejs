@@ -1,4 +1,4 @@
-import { prisma } from "../config/prismaConfig";
+import prisma from "../config/prismaConfig";
 import bcrypt from "bcrypt";
 import * as Joi from "joi";
 import registerValidation from "../validation/registerValidation";
@@ -15,24 +15,22 @@ export const handleNewUser = async (req: Request, res: Response) => {
 		const user = await prisma.user.create({
 			data: { email, username, password: hashedPwd },
 		});
-		return res.json({ status: "success", message: user }).status(200);
+		return res.status(200).json({ message: user });
 	} catch (err) {
 		if (err instanceof Joi.ValidationError) {
-			return res.json({
-				status: "failed",
+			return res.status(400).json({
 				message: err.details[0].message,
 			});
 		}
 
 		if (err instanceof PrismaClientKnownRequestError) {
 			if (err.code === "P2002") {
-				return res.json({
-					status: "failed",
+				return res.status(409).json({
 					message: "user already exists",
 				});
 			}
 		}
 		console.error(err);
-		res.json({ status: "failed", message: "something went wrong" });
+		return res.json({ message: "something went wrong" });
 	}
 };

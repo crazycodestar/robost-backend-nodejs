@@ -1,9 +1,8 @@
-import express from "express";
-import * as path from "path";
+import express, { Response } from "express";
 
 const router = express.Router();
 
-router.get("^/$|/index(.html)?", (req, res) => {
+router.get("^/$|/index(.html)?", (_, res: Response) => {
 	res.json({ result: "returning" });
 });
 

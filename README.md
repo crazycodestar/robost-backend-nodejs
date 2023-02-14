@@ -1,4 +1,4 @@
-# "Node JS Tutorial Series - MongoDB with Mongoose: Async CRUD"
+# **Complete Robost Nodejs, exprese, graphql backend**
 
 ✅ [Check out my YouTube Channel with all of my tutorials](https://www.youtube.com/DaveGrayTeachesCode).
 
@@ -9,12 +9,6 @@ _Remember to add your .env variables in the deployed version_
 
 **Description:**
 
-This repository shares the code applied during the Youtube tutorial. The tutorial is part of a [Node.js & Express for Beginners Playlist](https://www.youtube.com/playlist?list=PL0Zuz27SZ-6PFkIxaJ6Xx_X46avTM1aYw) on my channel.  
+This code takes the code from [Node.js & Express for Beginners Playlist](https://www.youtube.com/playlist?list=PL0Zuz27SZ-6PFkIxaJ6Xx_X46avTM1aYw) Youtube channel. It uses it as the base and reworks. I leave the basic authentication made with express but I change up the database from mongodb to postgres. I also add redis to manage usertoken instead of updating the database. The code never involved business logic so I created the base for business logic using Graphql Apollo
 
-[YouTube Tutorial](https://youtu.be/AWlLhRQJvtw) for this repository.
-
-I suggest completing my [8 hour JavaScript course tutorial video](https://youtu.be/EfAl9bwzVZk) if you are new to Javascript.
-
-### Academic Honesty
-
-**DO NOT COPY FOR AN ASSIGNMENT** - Avoid plagiargism and adhere to the spirit of this [Academic Honesty Policy](https://www.freecodecamp.org/news/academic-honesty-policy/).
+[YouTube Tutorial](https://youtu.be/AWlLhRQJvtw) for original repository.

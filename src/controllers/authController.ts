@@ -1,22 +1,26 @@
-// const User = require("../model/User");
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../config/prismaConfig";
+import prisma from "../config/prismaConfig";
+import { Request, Response } from "express";
+import authValidation from "../validation/authValidation";
+import * as Joi from "joi";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/index";
+import {
+	ACCESS_TOKEN_SECRET,
+	EXPIRESIN,
+	REFRESH_TOKEN_SECRET,
+} from "../config/environment";
+import client from "../config/redisConfig";
 
-export const handleLogin = async (req, res) => {
-	const { user, pwd } = req.body;
-	if (!user || !pwd)
-		return res
-			.status(400)
-			.json({ message: "Username and password are required." });
-
-	const foundUser = await prisma.user.findUnique({ where: { username: user } });
-	// const foundUser = await User.findOne({ username: user }).exec();
-	if (!foundUser) return res.sendStatus(401); //Unauthorized
-	// evaluate password
-	const match = await bcrypt.compare(pwd, foundUser.password);
-	if (match) {
-		// const roles = Object.values(foundUser.roles).filter(Boolean);
+export const handleLogin = async (req: Request, res: Response) => {
+	try {
+		const { email, password } = await authValidation.validateAsync(req.body);
+		const foundUser = await prisma.user.findUnique({
+			where: { email },
+		});
+		if (!foundUser) return res.sendStatus(401); //Unauthorized
+		const match = await bcrypt.compare(password, foundUser.password);
+		if (!match) return res.sendStatus(401);
 		// create JWTs
 		const accessToken = jwt.sign(
 			{
@@ -24,31 +28,40 @@ export const handleLogin = async (req, res) => {
 					username: foundUser.username,
 				},
 			},
-			process.env.ACCESS_TOKEN_SECRET,
+			ACCESS_TOKEN_SECRET,
 			{ expiresIn: "10s" }
 		);
-		const refreshToken = jwt.sign(
-			{ username: foundUser.username },
-			process.env.REFRESH_TOKEN_SECRET,
-			{ expiresIn: "1d" }
-		);
+		const refreshToken = jwt.sign({ id: foundUser.id }, REFRESH_TOKEN_SECRET, {
+			expiresIn: "1d",
+		});
 		// Saving refreshToken with current user
-		// TODO: handle refreshtoken here
-		// foundUser.refreshToken = refreshToken;
-		// const result = await foundUser.save();
-		// console.log(result);
+		client.setEx(foundUser.id.toString(), EXPIRESIN, refreshToken);
 
 		// Creates Secure Cookie with refresh token
 		res.cookie("jwt", refreshToken, {
 			httpOnly: true,
 			secure: true,
-			sameSite: "None",
-			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: "none",
+			maxAge: EXPIRESIN * 1000,
 		});
 
 		// Send authorization roles and access token to user
-		res.json({ accessToken });
-	} else {
-		res.sendStatus(401);
+		return res.status(200).json({ accessToken });
+	} catch (err) {
+		if (err instanceof Joi.ValidationError) {
+			return res.status(400).json({
+				message: err.details[0].message,
+			});
+		}
+
+		if (err instanceof PrismaClientKnownRequestError) {
+			if (err.code === "P2002") {
+				return res.status(409).json({
+					message: "user already exists",
+				});
+			}
+		}
+		console.error(err);
+		return res.json({ message: "something went wrong" });
 	}
 };

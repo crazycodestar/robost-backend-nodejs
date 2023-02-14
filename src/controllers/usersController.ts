@@ -1,12 +1,13 @@
-import { prisma } from "../config/prismaConfig";
+import prisma from "../config/prismaConfig";
+import { Request, Response } from "express";
 
-export const getAllUsers = async (req, res) => {
+export const getAllUsers = async (_: Request, res: Response) => {
 	const users = await prisma.user.findMany();
 	if (!users) return res.status(204).json({ message: "No users found" });
-	res.json(users);
+	return res.status(200).json({ message: users });
 };
 
-export const deleteUser = async (req, res) => {
+export const deleteUser = async (req: Request, res: Response) => {
 	if (!req?.body?.id)
 		return res.status(400).json({ message: "User ID required" });
 	const user = await prisma.user.findUnique({ where: { id: req.body.id } });
@@ -16,10 +17,10 @@ export const deleteUser = async (req, res) => {
 			.json({ message: `User ID ${req.body.id} not found` });
 	}
 	const result = await prisma.user.delete({ where: { id: req.body.id } });
-	res.json(result);
+	return res.status(200).json({ message: result });
 };
 
-export const getUser = async (req, res) => {
+export const getUser = async (req: Request, res: Response) => {
 	if (!req?.params?.id)
 		return res.status(400).json({ message: "User ID required" });
 	const user = await prisma.user.findUnique({ where: { id: req.body.id } });
@@ -28,5 +29,5 @@ export const getUser = async (req, res) => {
 			.status(204)
 			.json({ message: `User ID ${req.params.id} not found` });
 	}
-	res.json(user);
+	return res.status(200).json({ message: user });
 };
